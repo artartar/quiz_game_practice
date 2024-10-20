@@ -11,54 +11,42 @@ import (
 func main() {
 
 	var quizFile string
-	flag.StringVar(&quizFile, "quizFile", "problems.csv", "Name of the quiz file")
+	flag.StringVar(&quizFile, "quizFile", "problems.csv", "Name of the quizCSV file")
 
 	flag.Parse()
 
-	// os.Open() opens specific file in
-	// read-only mode and this return
-	// a pointer of type os.File
 	file, err := os.Open(quizFile)
 
 	// Checks for the error
 	if err != nil {
 		log.Fatal("Error while reading the file", err)
+		return
 	}
 
-	// Closes the file
 	defer file.Close()
 
-	// The csv.NewReader() function is called in
-	// which the object os.File passed as its parameter
-	// and this creates a new csv.Reader that reads
-	// from the file
 	reader := csv.NewReader(file)
 
 	// ReadAll reads all the questions from the CSV file
 	// and Returns them as slice of slices of string
 	// and an error if any
-	quiz, err := reader.ReadAll()
+	quizCSV, err := reader.ReadAll()
 
-	// Checks for the error
 	if err != nil {
 		fmt.Println("Error reading records")
+		return
 	}
 
-	var answer string
-	var score = 0
+	quiz := make(map[string]string)
+
+	for _, line := range quizCSV {
+		quiz[line[0]] = line[1]
+	}
+
+	fmt.Println(quiz)
+
 	// Loop to iterate through
-	// and print each of the string slice
+	// Add each item to a struct
 
-	for _, line := range quiz {
-		problem := line[0]
-		solution := line[1]
-
-		fmt.Printf(problem + ": \n")
-		fmt.Scanf("%s\n", &answer)
-
-		if answer == solution {
-			score++
-		}
-	}
-	fmt.Printf("You scored %d out of %d!", score, len(quiz))
+	// fmt.Printf("You scored %d out of %d!", score, len(quizCSV))
 }
