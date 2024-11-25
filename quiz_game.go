@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 )
 
 func main() {
@@ -14,7 +15,7 @@ func main() {
 
 	// Create flag so user can provide quiz file with custom name
 	var quizFlag = flag.String("file", defaultQuiz, "name of the custom quiz file")
-
+	var timeFlag = flag.Int("limit", 30, "Time limit to finish the quiz.")
 	flag.Parse()
 
 	// Open the file for reading by the csv package
@@ -31,19 +32,30 @@ func main() {
 		log.Fatal(read_err)
 	}
 
+	// After adding in the flag, you will need to convert to time.Duration(flag)
+	gameTimer := time.NewTimer(time.Duration(*timeFlag) * time.Second)
+
 	var score = 0
-	var userInput string
 
 	for i := range len(questions) {
 		fmt.Printf("Question %d: %v", i+1, questions[i][0])
-		fmt.Scan(&userInput)
-		fmt.Print("\n")
-
-		if userInput == questions[i][1] {
-			score++
+		inputCh := make(chan string)
+		// New go routine
+		go func() {
+			var userInput string
+			fmt.Scan(&userInput)
+			inputCh <- userInput
+		}()
+		select {
+		case <-gameTimer.C:
+			fmt.Printf("Total questions %d\nYour score: %d/%d", len(questions), score, len(questions))
+			return
+		case userInput := <-inputCh:
+			if userInput == questions[i][1] {
+				score++
+			}
 		}
 	}
-	fmt.Printf("Total questions %d\nYour score: %d/%d", len(questions), score, len(questions))
 }
 
 // Changes for practice!!!
